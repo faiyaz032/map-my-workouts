@@ -51,6 +51,7 @@ class Cycling extends Workout {
 class App {
   #map;
   #mapEvent;
+  #workouts = [];
 
   constructor() {
     this._getPosition();
@@ -96,6 +97,51 @@ class App {
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
   }
   _newWorkout(e) {
+    //? Helpers for validatoion
+    const validInput = (...inputs) => {
+      return inputs.every(input => Number.isFinite(input));
+    };
+    const allPositive = (...inputs) => {
+      return inputs.every(input => input > 0);
+    };
+
+    //? Get Data form the form
+    const type = inputType.value;
+    const distance = Number(inputDistance.value);
+    const duration = Number(inputDuration.value);
+    const { lat, lng } = this.#mapEvent.latlng;
+    let workout;
+
+    //? if workout = running then creat running object
+    if (type === 'running') {
+      const cadence = Number(inputCadence.value);
+      //? Check if data is valid
+      if (
+        !validInput(distance, duration, cadence) ||
+        !allPositive(distance, duration, cadence)
+      ) {
+        return alert('Inputs have to positive number');
+      }
+
+      workout = new Running([lat, lng], distance, duration, cadence);
+    }
+
+    //? if workout = cycling then creat cycling object
+    if (type === 'cycling') {
+      const elevation = Number(inputElevation.value);
+      //? Check if data is valid
+      if (
+        !validInput(distance, duration, elevation) ||
+        !allPositive(distance, duration)
+      ) {
+        return alert('Inputs have to positive number');
+      }
+      workout = new Cycling([lat, lng], distance, duration, elevation);
+    }
+    //? Add new object to workout Array
+    this.#workouts.push(workout);
+    //?
+
     //display the marker
     e.preventDefault();
 
@@ -103,7 +149,6 @@ class App {
     inputDistance.value = inputDuration.value = inputElevation.value = inputCadence.value =
       '';
 
-    const { lat, lng } = this.#mapEvent.latlng;
     L.marker([lat, lng])
       .addTo(this.#map)
       .bindPopup(
