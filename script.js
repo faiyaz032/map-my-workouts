@@ -67,12 +67,17 @@ class App {
   #mapZoomLevel = 14;
   #mapEvent;
   #workouts = [];
+  #markers = [];
 
   constructor() {
+    //? Get user position
     this._getPosition();
-    form.addEventListener('submit', this._newWorkout.bind(this));
 
-    //toogle cadence and elevation field
+    //*get data from loaclStorage
+    this._getLocalStorage();
+
+    //? attach event handlers
+    form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
   }
@@ -102,6 +107,9 @@ class App {
 
     //handling clicks on map
     this.#map.on('click', this._showForm.bind(this));
+    this.#workouts.forEach(workout => {
+      this._renderWorkoutMarker(workout);
+    });
   }
   _showForm(mapE) {
     this.#mapEvent = mapE;
@@ -165,13 +173,13 @@ class App {
     }
     //? Add new object to workout Array
     this.#workouts.push(workout);
-    console.log(this.#workouts);
     //?
 
     //display the marker
     this._renderWorkoutMarker(workout);
     this._renderWorkout(workout);
     this._hideForm();
+    this._setLocalStorage();
     //Clear input fields
     inputDistance.value = inputDuration.value = inputElevation.value = inputCadence.value =
       '';
@@ -258,6 +266,24 @@ class App {
       pan: { duration: 1 },
     });
     workout.increaseClick();
+  }
+  _setLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'));
+
+    if (!data) return;
+
+    this.#workouts = data;
+
+    this.#workouts.forEach(workout => {
+      this._renderWorkout(workout);
+    });
+  }
+  reset() {
+    localStorage.removeItem('workouts');
+    location.reload();
   }
 }
 
