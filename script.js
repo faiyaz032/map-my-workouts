@@ -9,6 +9,7 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
+const deleteAllBtn = document.querySelector('.delete-all');
 
 class Workout {
   date = new Date();
@@ -80,6 +81,7 @@ class App {
     form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
+    deleteAllBtn.addEventListener('click', this._deleteAllWorkouts.bind(this));
   }
 
   _getPosition() {
@@ -185,7 +187,8 @@ class App {
       '';
   }
   _renderWorkoutMarker(workout) {
-    L.marker(workout.coords)
+    let marker;
+    marker = L.marker(workout.coords)
       .addTo(this.#map)
       .bindPopup(
         L.popup({
@@ -200,6 +203,8 @@ class App {
         `${workout.type === 'running' ? '🏃' : '🚴‍♀️'} ${workout.description}`
       )
       .openPopup();
+    this.#markers.push(marker);
+    console.log(this.#markers);
   }
 
   _renderWorkout(workout) {
@@ -272,14 +277,34 @@ class App {
   }
   _getLocalStorage() {
     const data = JSON.parse(localStorage.getItem('workouts'));
-
     if (!data) return;
+
+    data.forEach(workout => {
+      if (workout.type === 'running') {
+        workout.__proto__ = Object.create(Running.prototype);
+      }
+      if (workout.type === 'cycling') {
+        workout.__proto__ = Object.create(Cycling.prototype);
+      }
+    });
 
     this.#workouts = data;
 
     this.#workouts.forEach(workout => {
       this._renderWorkout(workout);
     });
+    console.log(this.#workouts);
+  }
+  _deleteAllWorkouts() {
+    const workoutsHTML = document.querySelectorAll('.workout');
+    if (!workoutsHTML) return;
+    workoutsHTML.forEach((el, i) => {
+      el.style.display = 'none';
+      this.#map.removeLayer(this.#markers[i]);
+    });
+    this.#workouts = [];
+    this.#markers = [];
+    this._setLocalStorage();
   }
   reset() {
     localStorage.removeItem('workouts');
