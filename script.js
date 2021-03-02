@@ -210,6 +210,7 @@ class App {
   _renderWorkout(workout) {
     let html = `
       <li class="workout workout--${workout.type}" data-id="${workout.id}">
+      <i class="fas fa-trash delete-workout"></i>
         <h2 class="workout__title">${workout.description}</h2>
         <div class="workout__details">
           <span class="workout__icon">${
@@ -265,12 +266,24 @@ class App {
     const workout = this.#workouts.find(work => {
       return work.id === workoutEl.dataset.id;
     });
+    const workoutIndex = this.#workouts.findIndex(work => {
+      return work.id === workoutEl.dataset.id;
+    });
 
     this.#map.setView(workout.coords, this.#mapZoomLevel, {
       animate: true,
       pan: { duration: 1 },
     });
     workout.increaseClick();
+
+    //? Delete workout
+    if (e.target.classList.contains('delete-workout')) {
+      workoutEl.style.display = 'none';
+      this.#workouts.splice(workoutIndex, 1);
+      this.#map.removeLayer(this.#markers[workoutIndex]);
+      this.#markers.splice(workoutIndex, 1);
+      this._setLocalStorage();
+    }
   }
   _setLocalStorage() {
     localStorage.setItem('workouts', JSON.stringify(this.#workouts));
@@ -304,7 +317,7 @@ class App {
     });
     this.#workouts = [];
     this.#markers = [];
-    this._setLocalStorage();
+    localStorage.removeItem('workouts');
   }
   reset() {
     localStorage.removeItem('workouts');
