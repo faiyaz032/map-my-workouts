@@ -10,6 +10,7 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 const deleteAllBtn = document.querySelector('.delete-all');
+const showAllWorkoutBtn = document.querySelector('.show-all-btn');
 
 class Workout {
   date = new Date();
@@ -82,6 +83,11 @@ class App {
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
     deleteAllBtn.addEventListener('click', this._deleteAllWorkouts.bind(this));
+    //ignore-prettier
+    showAllWorkoutBtn.addEventListener(
+      'click',
+      this._showAllWorkouts.bind(this)
+    );
   }
 
   _getPosition() {
@@ -318,6 +324,15 @@ class App {
     this.#workouts = [];
     this.#markers = [];
     localStorage.removeItem('workouts');
+  }
+  _showAllWorkouts() {
+    const coordsArr = [];
+    this.#workouts.forEach(workout => coordsArr.push(workout.coords));
+    const options = {
+      padding: [30, 30],
+      maxZoom: 13,
+    };
+    this.#map.fitBounds(coordsArr, options);
   }
   reset() {
     localStorage.removeItem('workouts');
